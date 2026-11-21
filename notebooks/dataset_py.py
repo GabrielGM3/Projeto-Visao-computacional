@@ -247,12 +247,13 @@ def plotar_imagem_aleatoria(dataset_subset):
     idx = random.randint(0, len(dataset_subset) - 1)
     caminho_path, _ = dataset_subset.samples[idx]
     plotar_imagem_por_path(caminho_path)
+    
+# 1. Defina o caminho onde a pasta 'EuroSAT' está no ambiente de execução
+ # Usando caminho relativo para não quebrar caso seja executado fora do Colab (ex: VSCode local)
+caminho_local_dataset = "./data/eurosat/2750"
 
 if __name__ == '__main__':
-    # 1. Defina o caminho onde a pasta 'EuroSAT' está no ambiente de execução
-    # Usando caminho relativo para não quebrar caso seja executado fora do Colab (ex: VSCode local)
-    caminho_local_dataset = "./data/eurosat/2750"
-
+ 
     # 2. Chama a função principal da Parte 1
     # Ela vai ler a pasta local, verificar a integridade e carregar o split fixo
     # Se o .json com o mapeamento já existir ele não força a criação de um novo
@@ -262,14 +263,6 @@ if __name__ == '__main__':
     print(f" - Amostras de treino prontas: {len(treino_ds)}")
     print(f" - Amostras de validação prontas: {len(val_ds)}")
     print(f" - Amostras de teste prontas: {len(teste_ds)}")
-
-    # 3. Teste a função de inspeção visual (eg do conjunto de teste)
-    plotar_imagem_aleatoria(teste_ds)
-
-plotar_imagem_por_path(caminho_local_dataset+"/Pasture/Pasture_199.jpg")
-
-plotar_imagem_aleatoria(val_ds)
-
 
 
 """# Entrega 1 — Base de Dados e Divisão Fixa (EuroSAT RGB)
