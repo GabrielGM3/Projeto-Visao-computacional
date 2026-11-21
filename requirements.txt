@@ -1,0 +1,9 @@
+# Dependências iniciais; versões a definir após validar o ambiente.
+torch
+torchvision
+numpy
+pandas
+matplotlib
+scikit-learn
+Pillow
+jupyter

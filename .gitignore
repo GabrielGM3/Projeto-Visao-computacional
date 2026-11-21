@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Ambientes e configurações locais
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+
+# Dados e artefatos gerados (não incluir na entrega do código)
+data/
+datasets/
+checkpoints/
+outputs/
+runs/
+*.pt
+*.pth
+*.ckpt
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+Desktop.ini
