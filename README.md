@@ -71,7 +71,7 @@ Grupo com 7 integrantes, conforme autorização do professor. Os nomes serão pr
 | --- | --- | --- |
 | 1 — Base de dados | Obter e explorar a base; conferir classes e quantidades; preparar uma divisão fixa de treino, validação e teste. | Carregamento, divisão salva e descrição da base. |
 | 2 — Preparação das imagens | Definir redimensionamento, normalização e pequenas variações para treino; conferir os lotes. | Preparação das imagens e exemplos visualizados. |
-| 3 — Modelo e treinamento inicial (Gabriel) | Adaptar a saída da ResNet18 e treinar apenas a camada final. | Primeiro experimento, modelo salvo e histórico. |
+| 3 — Modelo e treinamento inicial — Guilherme | Adaptar a saída da ResNet18 e treinar apenas a camada final. | Primeiro experimento, modelo salvo e histórico. |
 | 4 — Ajuste fino | Reutilizar a estrutura de treinamento para ajustar também o último bloco da rede. | Segundo experimento e registro das configurações. |
 | 5 — Avaliação | Comparar os modelos na mesma base de teste e analisar os erros. | Métricas, gráficos e análise dos resultados. |
 | 6 — Relatório e referências | Organizar as contribuições no template IEEE e revisar o texto. | Relatório em PDF, pronto para impressão. |
