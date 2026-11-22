@@ -7,10 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1p4qaqCDcnZjOFYTCJE4CL1CjxM4Adtdz
 """
 
-#download do Dataset EuroSAT
-from torchvision import datasets, transforms
-dataset = datasets.EuroSAT(root='./data', download=True, transform=transforms.ToTensor())
-
 import os
 import json
 import random
@@ -18,6 +14,12 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset
 from torchvision import datasets
+
+
+def baixar_dataset(root="./data"):
+    """Baixa a base se necessário e retorna a pasta que contém as classes."""
+    datasets.EuroSAT(root=root, download=True)
+    return os.path.join(root, "eurosat", "2750")
 
 
 class EuroSATSubset(Dataset):
@@ -130,7 +132,7 @@ def gerar_ou_carregar_split(
         "teste": teste_paths
     }
 
-    os.makedirs(os.path.dirname(split_json_path), exist_ok=True)
+    os.makedirs(os.path.dirname(split_json_path) or ".", exist_ok=True)
     with open(split_json_path, "w", encoding="utf-8") as f:
         json.dump(dados_split, f, indent=4)
 
@@ -188,7 +190,7 @@ def exportar_mapeamento_por_classe(
             "total": qtd_tr + qtd_va + qtd_te
         }
 
-    os.makedirs(os.path.dirname(output_json_path), exist_ok=True)
+    os.makedirs(os.path.dirname(output_json_path) or ".", exist_ok=True)
     with open(output_json_path, "w", encoding="utf-8") as f:
         json.dump(mapeamento, f, indent=4)
 
@@ -253,7 +255,7 @@ def plotar_imagem_aleatoria(dataset_subset):
 caminho_local_dataset = "./data/eurosat/2750"
 
 if __name__ == '__main__':
- 
+    caminho_local_dataset = baixar_dataset()
     # 2. Chama a função principal da Parte 1
     # Ela vai ler a pasta local, verificar a integridade e carregar o split fixo
     # Se o .json com o mapeamento já existir ele não força a criação de um novo
@@ -265,10 +267,10 @@ if __name__ == '__main__':
     print(f" - Amostras de teste prontas: {len(teste_ds)}")
 
 
-"""# Entrega 1 — Base de Dados e Divisão Fixa (EuroSAT RGB)
+r"""# Entrega 1 — Base de Dados e Divisão Fixa (EuroSAT RGB)
 
 ## 1. Resumo das Atividades Realizadas
-Nesta primeira etapa do projeto, foi implementado o módulo `src/dataset.py`, responsável pela leitura local, validação de integridade, análise estatística, padronização de canais e particionamento reprodutível da base de dados **EuroSAT (versão RGB)**.
+Nesta primeira etapa do projeto, foi implementado o módulo `notebooks/dataset_py.py`, responsável pela leitura local, validação de integridade, análise estatística, padronização de canais e particionamento reprodutível da base de dados **EuroSAT (versão RGB)**.
 
 Principais entregas implementadas:
 - **Sanity Check (`verificar_integridade_imagens`):** Varredura completa via `PIL.Image.verify()` em todos os arquivos locais antes do carregamento, descartando o risco de imagens corrompidas interromperem o treinamento.
@@ -315,7 +317,7 @@ A **amostragem estratificada** aplicada resolve esse problema ao agrupar os arqu
 
 ## 3. Bibliotecas Utilizadas e Justificativas
 
-O módulo de gerenciamento de dados (`src/dataset.py`) faz uso das seguintes bibliotecas e pacotes do ecossistema Python:
+O módulo de gerenciamento de dados (`notebooks/dataset_py.py`) faz uso das seguintes bibliotecas e pacotes do ecossistema Python:
 
 | Biblioteca / Módulo | Função no Projeto |
 | :--- | :--- |
@@ -331,6 +333,6 @@ O módulo de gerenciamento de dados (`src/dataset.py`) faz uso das seguintes bib
 
 ## 4. Guia de Integração para as Próximas Etapas
 - **Regra de Ouro:** Os arquivos `docs/data_split.json` e `docs/mapeamento_classes_objetivo.json` devem ser versionados no Git (a pasta com as imagens locais deve permanecer no `.gitignore`). Nenhum integrante deve gerar novas divisões aleatórias.
-- **Para a Função 2 (Preparação de Imagens):** Chamar `treino_ds, val_ds, teste_ds = obter_datasets("./data/EuroSAT")` e atribuir o atributo `.transform` individualmente a cada objeto (`treino_ds.transform = ...`), sem risco de vazar *data augmentation* para validação ou teste.
+- **Para a Função 2 (Preparação de Imagens):** Chamar `treino_ds, val_ds, teste_ds = obter_datasets("./data/eurosat/2750")` e atribuir o atributo `.transform` individualmente a cada objeto (`treino_ds.transform = ...`), sem risco de vazar *data augmentation* para validação ou teste.
 - **Para a Função 5 (Avaliação e Inferência):** Utilizar exclusivamente o `teste_ds` e as funções `plotar_imagem_aleatoria(teste_ds)` ou `plotar_imagem_por_path(...)` para inspecionar predições individuais sem risco de avaliar imagens vistas durante o treinamento.
 """

@@ -9,11 +9,8 @@ Este módulo NÃO refaz a divisão dos dados. Ele reutiliza `obter_datasets()` e
   - a criação dos DataLoaders;
   - funções para conferir e visualizar os lotes.
 
-ATENÇÃO (efeito colateral herdado do dataset_py.py):
-  Importar este módulo importa o `dataset_py.py`, que no topo do arquivo executa
-  `datasets.EuroSAT(root='./data', download=True, ...)`. Ou seja, a base é baixada
-  (ou, se já existir, verificada) em `./data`, relativo à pasta atual, no momento
-  do import. Por isso, sempre execute a partir da RAIZ do repositório.
+O download é explícito, via `baixar_dataset()` do módulo `dataset_py.py`.
+Execute a partir da raiz do repositório para usar os caminhos padrão.
 """
 
 import os

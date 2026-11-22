@@ -4,7 +4,7 @@ Projeto acadêmico de Engenharia da Computação sobre transferência de aprendi
 
 ## Estado atual
 
-Organização inicial do repositório. A implementação, o download da base, os treinamentos e a avaliação ainda não foram iniciados.
+As etapas de carregamento da base, divisão fixa e preparação das imagens estão implementadas em `notebooks/`. Os treinamentos e a avaliação dos modelos ainda não foram iniciados.
 
 ## Proposta
 
@@ -26,13 +26,42 @@ O foco é um projeto de graduação com código simples e explicável. Vamos ada
 ```text
 .
 ├── src/              # Código de dados, modelo, treinamento e avaliação
-├── notebooks/        # Exploração e inspeção dos dados
-├── docs/             # Material do relatório e da apresentação
+├── notebooks/        # Módulos de dados e preparação das imagens; notebooks de uso
+├── docs/             # Divisão fixa, documentação e figuras
+├── tests/            # Verificações de dados e pré-processamento sem download
 ├── requirements.txt  # Dependências iniciais propostas
 └── README.md
 ```
 
-As pastas possuem apenas arquivos `.gitkeep` para serem registradas no Git.
+`src/` permanece reservada para as próximas etapas.
+
+## Executar as etapas de dados
+
+Na raiz do repositório, instale as dependências em um ambiente virtual:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Baixe a base explicitamente (as imagens ficam em `data/`, ignorada pelo Git):
+
+```bash
+python -c "from notebooks.dataset_py import baixar_dataset; print(baixar_dataset())"
+```
+
+Confira um lote preparado:
+
+```bash
+python notebooks/preprocessamento_py.py
+```
+
+Para exploração e figuras, abra `notebooks/02_preprocessamento.ipynb`. O notebook também pode ser executado no Colab. A divisão oficial em `docs/data_split.json` deve ser compartilhada entre os experimentos, sem novos sorteios.
+
+Para executar as verificações automatizadas sem baixar a base:
+
+```bash
+python -m unittest discover -s tests -v
+```
 
 ## Divisão do trabalho
 
@@ -42,7 +71,7 @@ Grupo com 7 integrantes, conforme autorização do professor. Os nomes serão pr
 | --- | --- | --- |
 | 1 — Base de dados | Obter e explorar a base; conferir classes e quantidades; preparar uma divisão fixa de treino, validação e teste. | Carregamento, divisão salva e descrição da base. |
 | 2 — Preparação das imagens | Definir redimensionamento, normalização e pequenas variações para treino; conferir os lotes. | Preparação das imagens e exemplos visualizados. |
-| 3 — Modelo e treinamento inicial (reservada ao responsável por este repositório) | Adaptar a saída da ResNet18 e treinar apenas a camada final. | Primeiro experimento, modelo salvo e histórico. |
+| 3 — Modelo e treinamento inicial (Gabriel) | Adaptar a saída da ResNet18 e treinar apenas a camada final. | Primeiro experimento, modelo salvo e histórico. |
 | 4 — Ajuste fino | Reutilizar a estrutura de treinamento para ajustar também o último bloco da rede. | Segundo experimento e registro das configurações. |
 | 5 — Avaliação | Comparar os modelos na mesma base de teste e analisar os erros. | Métricas, gráficos e análise dos resultados. |
 | 6 — Relatório e referências | Organizar as contribuições no template IEEE e revisar o texto. | Relatório em PDF, pronto para impressão. |
@@ -60,7 +89,7 @@ Cada integrante deve escrever sobre sua parte e contribuir com a apresentação.
 
 ## Dependências
 
-O arquivo `requirements.txt` lista as bibliotecas inicialmente previstas. Nenhuma instalação foi realizada e as versões compatíveis deverão ser registradas após a validação do ambiente. As instruções de execução serão adicionadas quando houver código funcional.
+O arquivo `requirements.txt` lista as bibliotecas previstas. A revisão das etapas de dados foi executada em CPU, no Windows, com Python 3.14, PyTorch 2.14.1 e Torchvision 0.29.2. A configuração de GPU será definida nas etapas de treinamento.
 
 ## Entregas previstas no enunciado
 

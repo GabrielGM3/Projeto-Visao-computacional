@@ -67,7 +67,7 @@ Saída de cada lote: imagens `[64, 3, 224, 224]` em `float32` e rótulos `[64]` 
 
 Execute sempre a partir da **raiz do repositório**, porque os caminhos `./data` e `docs/` são relativos a ela.
 
-> **Efeito colateral:** importar `preprocessamento_py` também importa o `dataset_py.py`, que no topo do arquivo executa `datasets.EuroSAT(root='./data', download=True)`. Na primeira execução isso baixa a base, que tem cerca de 90 MB. Nas seguintes, só confere se ela já existe. Se o import for feito a partir de outra pasta, a base será baixada em outro lugar.
+> **Download explícito:** importar os módulos não baixa a base. Antes de criar os DataLoaders, execute `baixar_dataset()` do módulo `notebooks.dataset_py`. O download usa `./data` e reutiliza a base quando ela já existe.
 
 ### Etapas 3 e 4 — Treinamento e ajuste fino
 
@@ -77,9 +77,12 @@ sys.path.append(os.path.abspath("notebooks"))
 
 import torch
 from notebooks.preprocessamento_py import obter_dataloaders
+from notebooks.dataset_py import baixar_dataset
+
+caminho_dados = baixar_dataset()
 
 treino_dl, val_dl, teste_dl, classes = obter_dataloaders(
-    data_dir="./data/eurosat/2750",
+    data_dir=caminho_dados,
     img_size=224,
     batch_size=64,
     num_workers=2,      # no Windows local, usar 0
