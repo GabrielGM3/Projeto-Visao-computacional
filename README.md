@@ -4,7 +4,7 @@ Projeto acadêmico de Engenharia da Computação sobre transferência de aprendi
 
 ## Estado atual
 
-As etapas de carregamento da base, divisão fixa e preparação das imagens estão implementadas em `notebooks/`. Os treinamentos e a avaliação dos modelos ainda não foram iniciados.
+As etapas de dados e preparacao das imagens estao em `notebooks/`. O modelo e o treinamento da camada final estao em `src/`. O ajuste fino e a avaliacao no conjunto de teste ficam para as proximas etapas.
 
 ## Proposta
 
@@ -25,15 +25,13 @@ O foco é um projeto de graduação com código simples e explicável. Vamos ada
 
 ```text
 .
-├── src/              # Código de dados, modelo, treinamento e avaliação
+├── src/              # Modelo e treinamento inicial
 ├── notebooks/        # Módulos de dados e preparação das imagens; notebooks de uso
 ├── docs/             # Divisão fixa, documentação e figuras
 ├── tests/            # Verificações de dados e pré-processamento sem download
 ├── requirements.txt  # Dependências iniciais propostas
 └── README.md
 ```
-
-`src/` permanece reservada para as próximas etapas.
 
 ## Executar as etapas de dados
 
@@ -63,6 +61,18 @@ Para executar as verificações automatizadas sem baixar a base:
 python -m unittest discover -s tests -v
 ```
 
+## Treinamento inicial
+
+Com a base ja baixada, execute na raiz do projeto:
+
+```bash
+python -m src.treinamento --num-workers 2
+```
+
+O comando treina apenas a camada final por 3 epocas. O melhor modelo e escolhido pela acuracia de validacao. Os pesos e o historico ficam em `outputs/treinamento_inicial/`, fora do Git.
+
+Detalhes e resultados: [Etapa 3](docs/etapa3_treinamento.md).
+
 ## Divisão do trabalho
 
 Grupo com 7 integrantes, conforme autorização do professor.
@@ -81,10 +91,9 @@ Cada integrante deve escrever sobre sua parte e contribuir com a apresentação.
 
 ## Próximos passos
 
-- Definir o ambiente de execução e verificar a disponibilidade de GPU.
-- Inspecionar a base e estabelecer a divisão dos dados antes dos experimentos.
-- Implementar primeiro um fluxo completo e simples.
-- Registrar configurações e resultados para o relatório.
+- Executar o ajuste fino na etapa 4 usando a mesma divisao dos dados.
+- Comparar os modelos no conjunto de teste na etapa 5.
+- Reunir os resultados no relatorio e na apresentacao.
 
 ## Dependências
 

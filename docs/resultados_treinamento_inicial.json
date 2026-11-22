@@ -1,0 +1,76 @@
+{
+  "configuracao": {
+    "modelo": "resnet18",
+    "pesos_iniciais": "IMAGENET1K_V1",
+    "camadas_treinadas": [
+      "fc"
+    ],
+    "epocas": 3,
+    "batch_size": 64,
+    "taxa_aprendizado": 0.001,
+    "otimizador": "Adam",
+    "criterio": "CrossEntropyLoss",
+    "img_size": 224,
+    "seed": 42,
+    "num_workers": 2,
+    "dispositivo": "cpu",
+    "torch": "2.14.1+cpu",
+    "threads_cpu": 8,
+    "split": "docs/data_split.json",
+    "split_sha256": "b3817b3802fff966378fcc01f618fa495ec0a6bd6548824d671e94c0fb07ea9a",
+    "imagens_treino": 18900,
+    "imagens_validacao": 4050
+  },
+  "classes": [
+    "AnnualCrop",
+    "Forest",
+    "HerbaceousVegetation",
+    "Highway",
+    "Industrial",
+    "Pasture",
+    "PermanentCrop",
+    "Residential",
+    "River",
+    "SeaLake"
+  ],
+  "melhor_epoca": 3,
+  "melhor_acuracia_validacao": 0.9335802469135802,
+  "historico": [
+    {
+      "epoca": 1,
+      "treino": {
+        "perda": 0.6087257491107341,
+        "acuracia": 0.8536507936507937
+      },
+      "validacao": {
+        "perda": 0.3003733627001445,
+        "acuracia": 0.9155555555555556
+      },
+      "tempo_segundos": 274.1444113
+    },
+    {
+      "epoca": 2,
+      "treino": {
+        "perda": 0.2746247569972245,
+        "acuracia": 0.9182010582010582
+      },
+      "validacao": {
+        "perda": 0.2317977657435853,
+        "acuracia": 0.9306172839506173
+      },
+      "tempo_segundos": 273.75103420000005
+    },
+    {
+      "epoca": 3,
+      "treino": {
+        "perda": 0.2302583066433195,
+        "acuracia": 0.927936507936508
+      },
+      "validacao": {
+        "perda": 0.20954348965927408,
+        "acuracia": 0.9335802469135802
+      },
+      "tempo_segundos": 272.59874309999987
+    }
+  ]
+}
