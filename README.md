@@ -65,7 +65,7 @@ python -m unittest discover -s tests -v
 
 ## Divisão do trabalho
 
-Grupo com 7 integrantes, conforme autorização do professor. Os nomes serão preenchidos após a escolha das funções.
+Grupo com 7 integrantes, conforme autorização do professor.
 
 | Função | Responsabilidade | Entrega prevista |
 | --- | --- | --- |
@@ -81,7 +81,6 @@ Cada integrante deve escrever sobre sua parte e contribuir com a apresentação.
 
 ## Próximos passos
 
-- Preencher os nomes dos responsáveis.
 - Definir o ambiente de execução e verificar a disponibilidade de GPU.
 - Inspecionar a base e estabelecer a divisão dos dados antes dos experimentos.
 - Implementar primeiro um fluxo completo e simples.
