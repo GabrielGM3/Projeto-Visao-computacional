@@ -1,10 +1,14 @@
+import json
+import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from src.treinamento import executar_epoca
+from src.treinamento import executar_epoca, treinar
 
 
 class RedePequena(nn.Module):
@@ -20,6 +24,29 @@ class RedePequena(nn.Module):
 
 
 class TestTreinamento(unittest.TestCase):
+    def test_salva_e_recarrega_melhor_modelo(self):
+        torch.manual_seed(42)
+        modelo = RedePequena()
+        dados = TensorDataset(torch.randn(5, 4), torch.tensor([0, 1, 0, 1, 0]))
+        loader = DataLoader(dados, batch_size=2)
+        classes = ["ClasseA", "ClasseB"]
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("src.treinamento.criar_modelo", return_value=modelo), patch(
+                "src.treinamento.obter_dataloaders", return_value=(loader, loader, None, classes)
+            ), patch("torch.cuda.is_available", return_value=False):
+                retornado, historico = treinar(epocas=2, pasta_saida=tmp)
+
+            salvo = torch.load(Path(tmp) / "melhor_modelo.pth", weights_only=True)
+            resultado = json.loads((Path(tmp) / "resultados.json").read_text())
+            melhor = max(historico, key=lambda item: item["validacao"]["acuracia"])
+            self.assertEqual(salvo["epoca"], melhor["epoca"])
+            self.assertEqual(resultado["melhor_epoca"], melhor["epoca"])
+            self.assertEqual(resultado["historico"], historico)
+            self.assertEqual(salvo["classes"], classes)
+            self.assertEqual(salvo["configuracao"]["camadas_treinadas"], ["fc"])
+            for nome, valor in retornado.state_dict().items():
+                self.assertTrue(torch.equal(valor, salvo["modelo"][nome]))
+
     def test_atualiza_apenas_camada_final_e_preserva_validacao(self):
         torch.manual_seed(42)
         modelo = RedePequena()
