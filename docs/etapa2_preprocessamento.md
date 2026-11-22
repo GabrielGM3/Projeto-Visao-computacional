@@ -42,7 +42,9 @@ Validação e teste **não recebem nenhuma variação aleatória**. Assim, a mes
 
 ### Outras decisões
 
-- **Só o treino é embaralhado.** O `data_split.json` está ordenado por classe. Sem o shuffle, cada lote de treino teria uma única classe, o que prejudica o treinamento. Em validação e teste a ordem fixa não atrapalha, porque as métricas são calculadas sobre a partição inteira. É por isso que o primeiro lote de validação, na figura `lote_validacao.png`, contém só `AnnualCrop`.
+- **Só o treino é embaralhado.** O `data_split.json` está ordenado por classe. Sem o shuffle, cada lote de treino teria uma única classe, o que prejudica o treinamento. Em validação e teste a ordem fixa não atrapalha, porque as métricas são calculadas sobre a partição inteira. A consequência é que o primeiro lote do `val_dl` contém só `AnnualCrop`.
+- **Figura de validação com amostra fixa.** Para que `lote_validacao.png` mostre várias classes, o notebook sorteia uma amostra fixa de 64 imagens da validação (`random.Random(42)`), monta um `Subset` e cria um DataLoader usado só para a figura. Essas imagens recebem as mesmas transformações de avaliação. A amostra serve apenas para visualização: o `val_dl` oficial continua sem embaralhamento, e as métricas usam a partição inteira.
+- **Figuras reproduzíveis.** As células que geram `lote_treino.png` e `aumentos.png` fixam as sementes (`random.seed(0)` e `torch.manual_seed(0)`), para que as variações aleatórias saiam iguais a cada execução do notebook. Isso vale só para as figuras e não muda o treinamento.
 - **Semente no embaralhamento (`seed=42`).** A ordem dos lotes de treino se repete em cada execução, o que facilita comparar os experimentos 1 e 2. As variações aleatórias de cada imagem continuam diferentes a cada época.
 - **Proteção do split.** Se o `docs/data_split.json` não for encontrado (por exemplo, quando o código é executado fora da raiz do repositório), `obter_dataloaders()` para com um erro em vez de deixar o `dataset_py.py` criar uma nova divisão.
 
