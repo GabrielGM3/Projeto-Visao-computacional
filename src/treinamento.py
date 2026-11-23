@@ -13,12 +13,16 @@ from src.modelo import criar_modelo
 
 
 def executar_epoca(modelo, dataloader, criterio, dispositivo, otimizador=None,
-                   base_congelada=True):
+                   base_congelada=True, camadas_treino=None):
     treino = otimizador is not None
     modelo.train(treino)
 
-    # Mantem as estatisticas da rede congelada
-    if base_congelada:
+    # Mantem as estatisticas das camadas congeladas
+    if camadas_treino is not None:
+        modelo.eval()
+        for nome_camada in camadas_treino:
+            getattr(modelo, nome_camada).train(treino)
+    elif base_congelada:
         modelo.eval()
         modelo.fc.train(treino)
 

@@ -1,0 +1,109 @@
+{
+  "configuracao": {
+    "etapa": "ajuste_fino",
+    "modelo": "resnet18",
+    "pesos_iniciais": "IMAGENET1K_V1",
+    "origem_pesos": "treinamento_inicial",
+    "caminho_modelo_inicial": "outputs\\treinamento_inicial\\melhor_modelo.pth",
+    "modelo_inicial_sha256": "4d2b2ebc3eb8630fdc0168703874ac85f32d8fa08481510b45edb628e818a591",
+    "epoca_modelo_inicial": 3,
+    "acuracia_validacao_inicial": 0.9330864197530864,
+    "camadas_treinadas": [
+      "layer4",
+      "fc"
+    ],
+    "parametros_treinaveis": 8398858,
+    "parametros_totais": 11181642,
+    "epocas": 5,
+    "batch_size": 64,
+    "taxa_aprendizado": 0.0001,
+    "otimizador": "Adam",
+    "criterio": "CrossEntropyLoss",
+    "img_size": 224,
+    "seed": 42,
+    "num_workers": 0,
+    "dispositivo": "cpu",
+    "torch": "2.15.0+cpu",
+    "threads_cpu": 8,
+    "split": "docs/data_split.json",
+    "split_sha256": "b3817b3802fff966378fcc01f618fa495ec0a6bd6548824d671e94c0fb07ea9a",
+    "imagens_treino": 18900,
+    "imagens_validacao": 4050
+  },
+  "classes": [
+    "AnnualCrop",
+    "Forest",
+    "HerbaceousVegetation",
+    "Highway",
+    "Industrial",
+    "Pasture",
+    "PermanentCrop",
+    "Residential",
+    "River",
+    "SeaLake"
+  ],
+  "melhor_epoca": 4,
+  "melhor_acuracia_validacao": 0.9762962962962963,
+  "historico": [
+    {
+      "epoca": 1,
+      "treino": {
+        "perda": 0.2069427608718317,
+        "acuracia": 0.9362433862433862
+      },
+      "validacao": {
+        "perda": 0.1238712184485278,
+        "acuracia": 0.9597530864197531
+      },
+      "tempo_segundos": 636.9604473999971
+    },
+    {
+      "epoca": 2,
+      "treino": {
+        "perda": 0.1038439112988414,
+        "acuracia": 0.9649735449735449
+      },
+      "validacao": {
+        "perda": 0.10018392576479618,
+        "acuracia": 0.9691358024691358
+      },
+      "tempo_segundos": 885.8372683999987
+    },
+    {
+      "epoca": 3,
+      "treino": {
+        "perda": 0.07867111505970123,
+        "acuracia": 0.9723280423280424
+      },
+      "validacao": {
+        "perda": 0.08999059519742006,
+        "acuracia": 0.971604938271605
+      },
+      "tempo_segundos": 903.9648617999992
+    },
+    {
+      "epoca": 4,
+      "treino": {
+        "perda": 0.06551067590398132,
+        "acuracia": 0.9777248677248678
+      },
+      "validacao": {
+        "perda": 0.07819503472744628,
+        "acuracia": 0.9762962962962963
+      },
+      "tempo_segundos": 849.0790748
+    },
+    {
+      "epoca": 5,
+      "treino": {
+        "perda": 0.05389303820316123,
+        "acuracia": 0.9817460317460317
+      },
+      "validacao": {
+        "perda": 0.09251963311441266,
+        "acuracia": 0.9740740740740741
+      },
+      "tempo_segundos": 773.6580571000013
+    }
+  ]
+}

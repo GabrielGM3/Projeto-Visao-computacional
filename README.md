@@ -4,7 +4,10 @@ Projeto acadêmico de Engenharia da Computação sobre transferência de aprendi
 
 ## Estado atual
 
-As etapas de dados e preparacao das imagens estao em `notebooks/`. O modelo e o treinamento da camada final estao em `src/`. O ajuste fino e a avaliacao no conjunto de teste ficam para as proximas etapas.
+As etapas de carregamento da base, divisão fixa, preparação das imagens, treinamento inicial (Etapa 3) e ajuste fino (Etapa 4) estão concluídas e documentadas em `docs/`.
+
+
+
 
 ## Proposta
 
@@ -73,6 +76,26 @@ O comando treina apenas a camada final por 3 epocas. O melhor modelo e escolhido
 
 Detalhes e resultados: [Etapa 3](docs/etapa3_treinamento.md).
 
+## Ajuste fino (Etapa 4)
+
+O segundo experimento reutiliza a divisão fixa (`docs/data_split.json`) e o pré-processamento da Etapa 2, descongelando o último bloco convolucional (`layer4`) junto com a camada final (`fc`) — totalizando 8.398.858 parâmetros treináveis (75,11% da rede). Os blocos iniciais (`conv1` a `layer3`) e suas estatísticas de *BatchNorm* permanecem congelados em modo `.eval()`.
+
+O treinamento parte do melhor checkpoint da Etapa 3 (*warm start*) por 5 épocas, com lote de 64 imagens, otimizador Adam, taxa de aprendizado reduzida (`0.0001`), `CrossEntropyLoss` e semente 42.
+
+Com a base baixada e o checkpoint da Etapa 3 em `outputs/treinamento_inicial/melhor_modelo.pth`, execute na raiz do repositório:
+
+```bash
+python -m src.ajuste_fino --modelo-inicial outputs/treinamento_inicial/melhor_modelo.pth --epocas 5 --taxa-aprendizado 0.0001 --num-workers 0
+```
+
+Também é possível executar partindo diretamente dos pesos do ImageNet (sem *warm start*) omitindo o argumento `--modelo-inicial`.
+
+- **Saídas locais:** `outputs/ajuste_fino/melhor_modelo.pth` (pesos da melhor época na validação) e `outputs/ajuste_fino/resultados.json`.
+- **Arquivos versionados:** `docs/etapa4_ajuste_fino.md`, `docs/resultados_ajuste_fino.json` e `docs/figuras/ajuste_fino.png`.
+- **Resultado na validação:** melhor desempenho na **época 4**, com **97,63%** de acurácia e perda de **0,0782** — ganho de +4,32 pontos percentuais sobre o checkpoint inicial (redução relativa de 64,6% nos erros de validação). Na época 5 surgiu início de sobreajuste (97,41% e perda 0,0925), descartado automaticamente pelo critério de seleção na validação.
+
+Como os arquivos `.pth` ficam fora do Git, os checkpoints das Etapas 3 e 4 devem ser compartilhados separadamente com o responsável pela Etapa 5.
+
 ## Divisão do trabalho
 
 Grupo com 7 integrantes, conforme autorização do professor.
@@ -91,7 +114,7 @@ Cada integrante deve escrever sobre sua parte e contribuir com a apresentação.
 
 ## Próximos passos
 
-- Executar o ajuste fino na etapa 4 usando a mesma divisao dos dados.
+
 - Comparar os modelos no conjunto de teste na etapa 5.
 - Reunir os resultados no relatorio e na apresentacao.
 
