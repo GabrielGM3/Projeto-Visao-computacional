@@ -4,10 +4,7 @@ Projeto acadêmico de Engenharia da Computação sobre transferência de aprendi
 
 ## Estado atual
 
-As etapas de carregamento da base, divisão fixa, preparação das imagens, treinamento inicial (Etapa 3) e ajuste fino (Etapa 4) estão concluídas e documentadas em `docs/`.
-
-
-
+As etapas de carregamento da base, divisão fixa, preparação das imagens, treinamento inicial (Etapa 3), ajuste fino (Etapa 4) e avaliação (Etapa 5) estão concluídas e documentadas em `docs/`. O relatório no formato IEEE (Etapa 6) está em `relatorio/`.
 
 ## Proposta
 
@@ -31,6 +28,7 @@ O foco é um projeto de graduação com código simples e explicável. Vamos ada
 ├── src/              # Modelo e treinamento inicial
 ├── notebooks/        # Módulos de dados e preparação das imagens; notebooks de uso
 ├── docs/             # Divisão fixa, documentação e figuras
+├── relatorio/        # Relatório IEEE (LaTeX e PDF)
 ├── tests/            # Verificações de dados e pré-processamento sem download
 ├── requirements.txt  # Dependências iniciais propostas
 └── README.md
@@ -96,6 +94,19 @@ Também é possível executar partindo diretamente dos pesos do ImageNet (sem *w
 
 Como os arquivos `.pth` ficam fora do Git, os checkpoints das Etapas 3 e 4 devem ser compartilhados separadamente com o responsável pela Etapa 5.
 
+## Relatório (Etapa 6)
+
+O relatório está em `relatorio/relatorio.pdf`, no template IEEE de conferência em duas colunas e papel A4. O texto reúne a descrição da base, o pré-processamento, os dois experimentos e a avaliação no conjunto de teste, usando os números de `docs/resultados_*.json` e as figuras de `docs/figuras/`. As referências estão em `relatorio/referencias.bib`.
+
+Para gerar o PDF novamente a partir do código-fonte, entre na pasta `relatorio/` e compile com o [Tectonic](https://tectonic-typesetting.github.io/):
+
+```bash
+cd relatorio
+tectonic relatorio.tex
+```
+
+Também é possível subir `relatorio.tex`, `referencias.bib` e a pasta `docs/figuras/` no Overleaf (compilador pdfLaTeX). Nesse caso, ajuste o `\graphicspath` no início do `.tex` para o local das figuras.
+
 ## Divisão do trabalho
 
 Grupo com 7 integrantes, conforme autorização do professor.
@@ -114,9 +125,9 @@ Cada integrante deve escrever sobre sua parte e contribuir com a apresentação.
 
 ## Próximos passos
 
-
-- Comparar os modelos no conjunto de teste na etapa 5.
-- Reunir os resultados no relatorio e na apresentacao.
+- Preencher nomes e instituição no início de `relatorio/relatorio.tex` e gerar o PDF final.
+- Imprimir o relatório (mesma versão do PDF entregue no Canvas).
+- Preparar a apresentação a partir das figuras e tabelas do relatório.
 
 ## Dependências
 

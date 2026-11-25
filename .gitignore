@@ -29,3 +29,10 @@ runs/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Arquivos auxiliares do LaTeX
+relatorio/*.aux
+relatorio/*.log
+relatorio/*.blg
+relatorio/*.bbl
+relatorio/*.out
