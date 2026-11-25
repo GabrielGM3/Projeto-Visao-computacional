@@ -103,7 +103,7 @@ y = F(x) + x .
 \end{equation}
 Essa ligação direta facilita a passagem do gradiente durante o treino e permitiu treinar redes bem mais profundas do que as anteriores sem perda de desempenho.
 
-A ResNet18 tem cerca de 11,2 milhões de parâmetros, organizados em uma camada convolucional inicial com \textit{max pooling}, quatro estágios de blocos residuais (\texttt{layer1} a \texttt{layer4}), cada um com dois blocos, uma média global (\textit{global average pooling}) e uma camada totalmente conectada (\texttt{fc}) com 1.000 saídas. A cada estágio, a resolução espacial cai pela metade e o número de canais dobra, de 64 até 512. Usamos a implementação da biblioteca Torchvision~\cite{torchvision2016}, com os pesos \texttt{IMAGENET1K\_V1}, obtidos no treinamento da rede para as 1.000 classes do ImageNet~\cite{deng2009imagenet}. A escolha da ResNet18, e não de versões maiores, se deve ao seu tamanho reduzido, que torna viável o treino em CPU.
+A ResNet18 original tem cerca de 11,7 milhões de parâmetros (11.689.512), organizados em uma camada convolucional inicial com \textit{max pooling}, quatro estágios de blocos residuais (\texttt{layer1} a \texttt{layer4}), cada um com dois blocos, uma média global (\textit{global average pooling}) e uma camada totalmente conectada (\texttt{fc}) com 1.000 saídas. A cada estágio, a resolução espacial cai pela metade e o número de canais dobra, de 64 até 512. Usamos a implementação da biblioteca Torchvision~\cite{torchvision2016}, com os pesos \texttt{IMAGENET1K\_V1}, obtidos no treinamento da rede para as 1.000 classes do ImageNet~\cite{deng2009imagenet}. A escolha da ResNet18, e não de versões maiores, se deve ao seu tamanho reduzido, que torna viável o treino em CPU.
 
 \subsection{Resultados de referência na EuroSAT}
 
@@ -139,7 +139,7 @@ O conjunto de treino é embaralhado a cada época, com semente fixa, e os lotes 
 
 \subsection{Adaptação da camada de saída}
 
-A camada \texttt{fc} original, com 1.000 saídas, foi substituída por uma nova camada linear com 512 entradas e 10 saídas, uma por classe, inicializada aleatoriamente. O restante da rede mantém os pesos do ImageNet. Todo o código foi escrito em Python com PyTorch~\cite{paszke2019pytorch}.
+A camada \texttt{fc} original, com 1.000 saídas, foi substituída por uma nova camada linear com 512 entradas e 10 saídas, uma por classe, inicializada aleatoriamente. Com essa troca, o total de parâmetros da rede passa a 11.181.642. O restante da rede mantém os pesos do ImageNet. Todo o código foi escrito em Python com PyTorch~\cite{paszke2019pytorch}.
 
 \subsection{Experimento 1: treino da camada final}
 
