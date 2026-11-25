@@ -64,7 +64,7 @@ O problema tratado é de classificação multiclasse: dada uma imagem RGB de uma
 
 A EuroSAT RGB contém 27.000 imagens de $64\times64$ pixels, recortadas de cenas do Sentinel-2 com resolução espacial de 10~m por pixel~\cite{helber2019eurosat}. Cada imagem cobre cerca de $640\times640$~m e pertence a uma de dez classes: \textit{AnnualCrop}, \textit{Forest}, \textit{HerbaceousVegetation}, \textit{Highway}, \textit{Industrial}, \textit{Pasture}, \textit{PermanentCrop}, \textit{Residential}, \textit{River} e \textit{SeaLake}. A base é levemente desbalanceada: cinco classes têm 3.000 imagens, quatro têm 2.500 e \textit{Pasture} tem 2.000.
 
-Antes de dividir os dados, todas as imagens foram abertas com a biblioteca Pillow para verificar se havia arquivos corrompidos; nenhum foi encontrado. A divisão foi feita de forma estratificada, separando 70\% de cada classe para treino, 15\% para validação e 15\% para teste, com semente fixa (42). O resultado foi salvo em um arquivo JSON versionado no repositório, e todos os experimentos leem esse mesmo arquivo, sem novos sorteios. A Tabela~\ref{tab:divisao} resume as quantidades.
+Antes de dividir os dados, todas as imagens foram abertas com a biblioteca Pillow para verificar se havia arquivos corrompidos; nenhum foi encontrado. A divisão foi feita por amostragem estratificada. Nesse tipo de amostragem, as imagens são primeiro agrupadas por classe (os estratos), e o sorteio é feito separadamente dentro de cada grupo, sempre com a mesma proporção: 70\% de cada classe para treino, 15\% para validação e 15\% para teste, com semente fixa (42). Dessa forma, as três partições mantêm a mesma distribuição de classes da base completa. Em um sorteio simples sobre as 27.000 imagens, a quantidade de cada classe em cada partição dependeria do acaso, e uma classe poderia ficar sub-representada no teste, o que é mais provável para a menor delas e distorceria as métricas por classe. O resultado foi salvo em um arquivo JSON versionado no repositório, e todos os experimentos leem esse mesmo arquivo, sem novos sorteios. A Tabela~\ref{tab:divisao} resume as quantidades.
 
 \begin{table}[H]
 \centering
@@ -118,13 +118,19 @@ O modelo proposto consiste em adaptar a ResNet18 pré-treinada à EuroSAT, troca
 
 \subsection{Pré-processamento}
 
-As imagens foram redimensionadas de $64\times64$ para $224\times224$ pixels, resolução usada no pré-treino da ResNet18. Com a entrada original, o mapa de características ao fim da última camada convolucional teria apenas $2\times2$ posições, contra $7\times7$ com 224 pixels. A ampliação não acrescenta informação, mas deixa os objetos em uma escala mais próxima daquela que os filtros pré-treinados reconhecem. Em seguida, as imagens foram normalizadas com a média e o desvio padrão do ImageNet, pois é essa a distribuição de entrada que os pesos congelados esperam.
+As imagens foram ampliadas de $64\times64$ para $224\times224$ pixels, resolução usada no pré-treino da ResNet18, com a transformação \texttt{Resize} da Torchvision. Essa transformação usa interpolação bilinear: cada pixel da imagem ampliada é calculado como uma média ponderada dos quatro pixels mais próximos da imagem original, o que produz uma imagem suavizada, sem os blocos que surgiriam se cada pixel fosse simplesmente repetido. Com a entrada original, o mapa de características ao fim da última camada convolucional teria apenas $2\times2$ posições, contra $7\times7$ com 224 pixels. A ampliação não acrescenta informação, mas deixa os objetos em uma escala mais próxima daquela que os filtros pré-treinados reconhecem.
 
-No treino, foram aplicadas variações aleatórias que mantêm a classe da imagem: espelhamentos horizontal e vertical, rotações em múltiplos de $90^\circ$ e uma variação leve de brilho, contraste e saturação ($\pm10\%$), sem alterar o matiz. Como as imagens de satélite são vistas de cima, não existe um lado certo para cima, e as rotações de $90^\circ$ não criam bordas vazias. Recortes aleatórios não foram usados porque, em imagens tão pequenas, poderiam remover justamente o elemento que define a classe (uma estrada ou um rio, por exemplo). A Fig.~\ref{fig:aumentos} mostra uma imagem original e cinco versões aumentadas. Validação e teste recebem apenas o redimensionamento e a normalização, sem nenhuma operação aleatória.
+Em seguida, com os pixels já convertidos para a escala de 0 a 1, cada canal $c$ (R, G e B) foi normalizado por
+\begin{equation}
+x'_c = \frac{x_c - \mu_c}{\sigma_c},
+\end{equation}
+em que $\mu_c$ e $\sigma_c$ são a média e o desvio padrão daquele canal calculados sobre as imagens de treino do ImageNet: $\mu = (0{,}485;\, 0{,}456;\, 0{,}406)$ e $\sigma = (0{,}229;\, 0{,}224;\, 0{,}225)$. A ResNet18 foi pré-treinada com entradas normalizadas exatamente dessa forma, então usar os mesmos valores mantém as imagens da EuroSAT na escala que os pesos pré-treinados esperam. Isso é especialmente importante no Experimento 1, em que quase toda a rede fica congelada.
+
+Somente no treino, foi aplicado aumento de dados (\textit{data augmentation}), isto é, variações aleatórias que geram versões diferentes de cada imagem a cada época, sem mudar sua classe: espelhamentos horizontal e vertical, rotações em múltiplos de $90^\circ$ e uma variação leve de brilho, contraste e saturação ($\pm10\%$), sem alterar o matiz. Como as imagens de satélite são vistas de cima, não existe um lado certo para cima, e as rotações de $90^\circ$ não criam bordas vazias. Recortes aleatórios não foram usados porque, em imagens tão pequenas, poderiam remover justamente o elemento que define a classe (uma estrada ou um rio, por exemplo). A Fig.~\ref{fig:aumentos} mostra uma imagem original e cinco versões aumentadas. Validação e teste recebem apenas o redimensionamento e a normalização, sem aumento de dados, de modo que cada imagem gera sempre o mesmo tensor e os dois experimentos são avaliados sobre entradas idênticas.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\columnwidth]{aumentos_grade.png}
+\includegraphics[width=0.75\columnwidth]{aumentos_grade.png}
 \caption{Imagem original da classe \textit{River} ($64\times64$) e cinco variações geradas no treino, já em $224\times224$.}
 \label{fig:aumentos}
 \end{figure}
@@ -149,11 +155,11 @@ O treino parte do melhor modelo do Experimento 1 (\textit{warm start}), e não d
 
 \subsection{Métricas}
 
-Os dois modelos selecionados foram avaliados uma única vez no conjunto de teste, que não foi usado em nenhuma decisão de treino. Foram calculadas a acurácia, o F1 macro (média simples do F1 das dez classes, que dá o mesmo peso a classes com menos imagens), a precisão, a revocação e o F1 de cada classe, além da matriz de confusão~\cite{sokolova2009systematic,pedregosa2011scikit}. Para verificar se a diferença entre os modelos é estatisticamente significativa, aplicamos o teste de McNemar~\cite{mcnemar1947note} às predições pareadas das 4.050 imagens de teste.
+Os dois modelos selecionados foram avaliados uma única vez no conjunto de teste, que não foi usado em nenhuma decisão de treino. Foram calculadas a acurácia, o F1 macro (média simples do F1 das dez classes, que dá o mesmo peso a classes com menos imagens), a precisão, a revocação e o F1 de cada classe, além da matriz de confusão~\cite{sokolova2009systematic,pedregosa2011scikit}. Para verificar se a diferença entre os modelos é estatisticamente significativa, aplicamos o teste de McNemar~\cite{mcnemar1947note} às predições pareadas das 4.050 imagens de teste. Esse teste foi escolhido porque os dois modelos são avaliados sobre as mesmas imagens, então seus resultados não são independentes, e comparar as duas acurácias como se viessem de amostras diferentes não seria adequado. O McNemar considera apenas as imagens em que os modelos discordam, isto é, em que um acerta e o outro erra, e verifica se essas discordâncias estão equilibradas, como se esperaria caso os dois modelos tivessem o mesmo desempenho.
 
 \subsection{Ambiente de execução}
 
-Todos os experimentos foram executados em CPU, no Windows, com 8 \textit{threads}. O Experimento 1 foi executado com o PyTorch 2.14.1, e o Experimento 2 e a avaliação, com o PyTorch 2.15.0. Cada época do Experimento 1 levou cerca de 4,6 minutos; as do Experimento 2 levaram entre 10,6 e 15,1 minutos, totalizando cerca de 67,5 minutos. Os gráficos foram gerados com a Matplotlib~\cite{hunter2007matplotlib}.
+O código escolhe o dispositivo automaticamente: usa a GPU, por meio do CUDA, quando há uma disponível e, caso contrário, executa na CPU. As execuções registradas neste trabalho foram feitas em CPU, no Windows, com 8 \textit{threads}. O Experimento 1 foi executado com o PyTorch 2.14.1, e o Experimento 2 e a avaliação, com o PyTorch 2.15.0. Cada época do Experimento 1 levou cerca de 4,6 minutos; as do Experimento 2 levaram entre 10,6 e 15,1 minutos, totalizando cerca de 67,5 minutos. Os gráficos foram gerados com a Matplotlib~\cite{hunter2007matplotlib}.
 
 \section{Resultados}
 \label{sec:resultados}
@@ -187,7 +193,7 @@ Exp. & Época & \multicolumn{2}{c}{Treino} & \multicolumn{2}{c}{Validação} \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\columnwidth]{treinamento_inicial.png}
+\includegraphics[width=0.94\columnwidth]{treinamento_inicial.png}
 \caption{Perda e acurácia por época no Experimento 1 (apenas a camada final).}
 \label{fig:curva_inicial}
 \end{figure}
@@ -196,14 +202,14 @@ No Experimento 2, a acurácia de validação passou de 93,31\% (valor do modelo 
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\columnwidth]{ajuste_fino.png}
+\includegraphics[width=0.94\columnwidth]{ajuste_fino.png}
 \caption{Perda e acurácia por época no Experimento 2 (\texttt{layer4} + \texttt{fc}). A linha pontilhada marca a época selecionada.}
 \label{fig:curva_fino}
 \end{figure}
 
 \subsection{Comparação no conjunto de teste}
 
-A Tabela~\ref{tab:teste} resume o desempenho no teste. O ajuste fino aumentou a acurácia em 4,52 pontos percentuais e o F1 macro em 4,72 pontos, e o número de erros caiu de 287 para 104, uma redução de 63,8\%. Os valores de teste ficaram próximos dos de validação nos dois casos (diferenças de 0,45 e 0,20 ponto percentual), o que indica que a seleção de modelos pela validação não favoreceu indevidamente nenhum dos experimentos.
+A Tabela~\ref{tab:teste} resume o desempenho no teste. O ajuste fino aumentou a acurácia em 4,52 pontos percentuais e o F1 macro em 4,72 pontos, e o número de erros caiu de 287 para 104, uma redução de 63,8\%. Os valores de teste ficaram próximos dos de validação da Tabela~\ref{tab:treino} nos dois casos (diferenças de 0,45 e 0,20 ponto percentual), o que indica que a seleção de modelos pela validação não favoreceu indevidamente nenhum dos experimentos.
 
 \begin{table}[H]
 \centering
@@ -224,6 +230,7 @@ Diferença                   & +4,52 & +4,72 & +183 & $-$183 \\
 Na comparação imagem a imagem, 215 imagens erradas pelo Experimento 1 passaram a ser classificadas corretamente após o ajuste fino, 32 imagens que estavam corretas passaram a ser erradas e 72 continuaram erradas nos dois modelos. Com esses números, o teste de McNemar com correção de continuidade resulta em
 \begin{equation}
 \chi^2 = \frac{(|215 - 32| - 1)^2}{215 + 32} \approx 134{,}1,
+\label{eq:mcnemar}
 \end{equation}
 com um grau de liberdade, o que corresponde a $p < 0{,}001$. A diferença entre os dois modelos, portanto, não pode ser explicada por variação aleatória nas imagens de teste.
 
@@ -270,7 +277,7 @@ As matrizes de confusão das Figs.~\ref{fig:matriz1} e~\ref{fig:matriz2} mostram
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.88\columnwidth]{matriz_exp1.png}
+\includegraphics[width=0.8\columnwidth]{matriz_exp1.png}
 \caption{Matriz de confusão do Experimento 1 (apenas \texttt{fc}) no conjunto de teste. As linhas indicam a classe real e as colunas, a classe prevista.}
 \label{fig:matriz1}
 \end{figure}
@@ -279,18 +286,18 @@ Após o ajuste fino (Fig.~\ref{fig:matriz2}), essas confusões diminuíram basta
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.88\columnwidth]{matriz_exp2.png}
+\includegraphics[width=0.8\columnwidth]{matriz_exp2.png}
 \caption{Matriz de confusão do Experimento 2 (\texttt{layer4} + \texttt{fc}) no conjunto de teste.}
 \label{fig:matriz2}
 \end{figure}
 
 \subsection{Análise dos erros}
 
-Dos 104 erros que restaram no Experimento 2, a maior parte envolve estruturas lineares: são 17 confusões entre \textit{Highway} e \textit{River} nos dois sentidos, além de 9 imagens de \textit{Industrial} classificadas como \textit{Highway}. Outro grupo envolve as classes de vegetação e cultivo (\textit{PermanentCrop}, \textit{HerbaceousVegetation} e \textit{AnnualCrop}). A Fig.~\ref{fig:erros} mostra os nove erros com maior confiança do modelo.
+Dos 104 erros que restaram no Experimento 2 (Tabela~\ref{tab:teste}), a maior parte envolve estruturas lineares, como mostra a Fig.~\ref{fig:matriz2}: são 17 confusões entre \textit{Highway} e \textit{River} nos dois sentidos, além de 9 imagens de \textit{Industrial} classificadas como \textit{Highway}. Outro grupo envolve as classes de vegetação e cultivo (\textit{PermanentCrop}, \textit{HerbaceousVegetation} e \textit{AnnualCrop}). A Fig.~\ref{fig:erros} mostra os nove erros com maior confiança do modelo.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.72\columnwidth]{exemplos_erros_ajuste_fino.png}
+\includegraphics[width=0.66\columnwidth]{exemplos_erros_ajuste_fino.png}
 \caption{Os nove erros de maior confiança do Experimento 2, com a classe real e a classe prevista.}
 \label{fig:erros}
 \end{figure}
@@ -300,7 +307,7 @@ Observando essas imagens, nota-se que vários erros não são equívocos grossei
 \subsection{Discussão e limitações}
 \label{sec:discussao}
 
-Os resultados confirmam o que a literatura aponta~\cite{yosinski2014transferable,kornblith2019better}: os filtros pré-treinados no ImageNet já são úteis para imagens de satélite, a ponto de um classificador linear sobre eles atingir quase 93\% de acurácia, mas ajustar as camadas mais profundas ao novo domínio traz um ganho grande. A distância entre o ImageNet (fotos de objetos tiradas no nível do chão) e a EuroSAT (vista aérea, sem orientação definida) ajuda a explicar por que as camadas mais específicas precisam ser adaptadas. O resultado de 97,43\% ficou próximo dos 98,57\% relatados por Helber \textit{et al.}~\cite{helber2019eurosat} com a ResNet-50, uma rede maior, com divisão de dados diferente e mais tempo de treino.
+Os resultados confirmam o que a literatura aponta~\cite{yosinski2014transferable,kornblith2019better}: os filtros pré-treinados no ImageNet já são úteis para imagens de satélite, a ponto de um classificador linear sobre eles atingir quase 93\% de acurácia (Tabela~\ref{tab:teste}), mas ajustar as camadas mais profundas ao novo domínio traz um ganho grande. A distância entre o ImageNet (fotos de objetos tiradas no nível do chão) e a EuroSAT (vista aérea, sem orientação definida) ajuda a explicar por que as camadas mais específicas precisam ser adaptadas. O resultado de 97,43\% (Tabela~\ref{tab:teste}) ficou próximo dos 98,57\% relatados por Helber \textit{et al.}~\cite{helber2019eurosat} com a ResNet-50, uma rede maior, com divisão de dados diferente e mais tempo de treino.
 
 Algumas limitações devem ser consideradas. Primeiro, os dois experimentos não tiveram o mesmo número de épocas: o Experimento 2 parte do modelo do Experimento 1 e treina por mais 5 épocas, totalizando 8. Parte do ganho pode vir apenas do treino mais longo, embora as curvas do Experimento 1 já mostrem que a acurácia de validação estava se estabilizando. Segundo, os números de épocas e as taxas de aprendizado foram escolhidos para manter o tempo de execução viável em CPU, sem busca de hiperparâmetros. Terceiro, cada experimento foi executado com uma única semente, então não temos uma estimativa da variação entre execuções; o teste de McNemar avalia a variação devida às imagens de teste, mas não a do treinamento. Por fim, foram usadas apenas as bandas RGB, enquanto o Sentinel-2 fornece 13 bandas espectrais que podem ajudar a separar tipos de vegetação.
 
@@ -309,7 +316,7 @@ Como trabalhos futuros, seria interessante liberar mais blocos da rede (por exem
 \section{Conclusão}
 \label{sec:conclusao}
 
-Este trabalho comparou duas formas de adaptar a ResNet18 pré-treinada no ImageNet para classificar a EuroSAT RGB. Treinar apenas a camada final resultou em 92,91\% de acurácia no teste, um resultado razoável dado que apenas 5.130 parâmetros foram ajustados. Liberar também o último bloco convolucional elevou a acurácia para 97,43\% e o F1 macro para 97,34\%, com melhora em todas as dez classes e redução de 63,8\% no número de erros. A diferença é estatisticamente significativa segundo o teste de McNemar. Os erros restantes se concentram em imagens que misturam mais de uma classe ou cuja classe é difícil de distinguir na resolução de $64\times64$ pixels.
+Este trabalho comparou duas formas de adaptar a ResNet18 pré-treinada no ImageNet para classificar a EuroSAT RGB. Treinar apenas a camada final resultou em 92,91\% de acurácia no teste (Tabela~\ref{tab:teste}), um resultado razoável dado que apenas 5.130 parâmetros foram ajustados. Liberar também o último bloco convolucional elevou a acurácia para 97,43\% e o F1 macro para 97,34\%, com melhora em todas as dez classes (Tabela~\ref{tab:classes} e Fig.~\ref{fig:comparacao}) e redução de 63,8\% no número de erros. A diferença é estatisticamente significativa segundo o teste de McNemar (Eq.~\ref{eq:mcnemar}). Os erros restantes (Figs.~\ref{fig:matriz2} e~\ref{fig:erros}) se concentram em imagens que misturam mais de uma classe ou cuja classe é difícil de distinguir na resolução de $64\times64$ pixels.
 
 Todo o código, a divisão fixa dos dados, os históricos de treinamento e os resultados da avaliação estão disponíveis no repositório do projeto\footnote{\url{https://github.com/GabrielGM3/Projeto-Visao-computacional}}, o que permite reproduzir os experimentos e a comparação.
 
