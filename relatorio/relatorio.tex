@@ -13,6 +13,7 @@
 \fi
 \usepackage[brazil]{babel}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{array}
@@ -20,8 +21,9 @@
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
 
-\graphicspath{{../docs/figuras/}}
+\graphicspath{{figuras/}{../docs/figuras/}}
 \renewcommand{\IEEEkeywordsname}{Palavras-chave}
+\raggedbottom
 
 \begin{document}
 
@@ -64,7 +66,7 @@ A EuroSAT RGB contém 27.000 imagens de $64\times64$ pixels, recortadas de cenas
 
 Antes de dividir os dados, todas as imagens foram abertas com a biblioteca Pillow para verificar se havia arquivos corrompidos; nenhum foi encontrado. A divisão foi feita de forma estratificada, separando 70\% de cada classe para treino, 15\% para validação e 15\% para teste, com semente fixa (42). O resultado foi salvo em um arquivo JSON versionado no repositório, e todos os experimentos leem esse mesmo arquivo, sem novos sorteios. A Tabela~\ref{tab:divisao} resume as quantidades.
 
-\begin{table}[!t]
+\begin{table}[H]
 \centering
 \caption{Divisão estratificada da base EuroSAT RGB}
 \label{tab:divisao}
@@ -120,12 +122,12 @@ As imagens foram redimensionadas de $64\times64$ para $224\times224$ pixels, res
 
 No treino, foram aplicadas variações aleatórias que mantêm a classe da imagem: espelhamentos horizontal e vertical, rotações em múltiplos de $90^\circ$ e uma variação leve de brilho, contraste e saturação ($\pm10\%$), sem alterar o matiz. Como as imagens de satélite são vistas de cima, não existe um lado certo para cima, e as rotações de $90^\circ$ não criam bordas vazias. Recortes aleatórios não foram usados porque, em imagens tão pequenas, poderiam remover justamente o elemento que define a classe (uma estrada ou um rio, por exemplo). A Fig.~\ref{fig:aumentos} mostra uma imagem original e cinco versões aumentadas. Validação e teste recebem apenas o redimensionamento e a normalização, sem nenhuma operação aleatória.
 
-\begin{figure*}[!t]
+\begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{aumentos.png}
+\includegraphics[width=0.85\columnwidth]{aumentos_grade.png}
 \caption{Imagem original da classe \textit{River} ($64\times64$) e cinco variações geradas no treino, já em $224\times224$.}
 \label{fig:aumentos}
-\end{figure*}
+\end{figure}
 
 O conjunto de treino é embaralhado a cada época, com semente fixa, e os lotes têm 64 imagens. Isso é necessário porque o arquivo de divisão está ordenado por classe: sem o embaralhamento, cada lote teria uma única classe.
 
@@ -160,7 +162,7 @@ Todos os experimentos foram executados em CPU, no Windows, com 8 \textit{threads
 
 A Tabela~\ref{tab:treino} mostra a evolução dos dois experimentos na validação. No Experimento 1, a perda caiu nas três épocas e a melhor acurácia de validação foi de 93,36\%, na época 3. A acurácia de treino ficou abaixo da de validação, o que é esperado: ela é calculada sobre imagens com variações aleatórias e acumulada ao longo da época, enquanto o modelo ainda está mudando. A Fig.~\ref{fig:curva_inicial} mostra as curvas correspondentes.
 
-\begin{table}[!t]
+\begin{table}[H]
 \centering
 \caption{Perda e acurácia por época nos dois experimentos}
 \label{tab:treino}
@@ -183,7 +185,7 @@ Exp. & Época & \multicolumn{2}{c}{Treino} & \multicolumn{2}{c}{Validação} \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[!t]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\columnwidth]{treinamento_inicial.png}
 \caption{Perda e acurácia por época no Experimento 1 (apenas a camada final).}
@@ -192,7 +194,7 @@ Exp. & Época & \multicolumn{2}{c}{Treino} & \multicolumn{2}{c}{Validação} \\
 
 No Experimento 2, a acurácia de validação passou de 93,31\% (valor do modelo usado como ponto de partida\footnote{O modelo de partida foi obtido em uma nova execução do Experimento 1, com o mesmo código e as mesmas configurações; sua acurácia de validação ficou 0,05 ponto percentual abaixo da registrada na Tabela~\ref{tab:treino}.}) para 95,98\% já na primeira época. O melhor resultado foi na época 4, com 97,63\%. Na época 5, a perda de treino continuou caindo, mas a perda de validação subiu de 0,0782 para 0,0925 e a acurácia recuou para 97,41\%, um primeiro sinal de sobreajuste (Fig.~\ref{fig:curva_fino}). Como o modelo salvo é sempre o de melhor validação, essa última época foi descartada.
 
-\begin{figure}[!t]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\columnwidth]{ajuste_fino.png}
 \caption{Perda e acurácia por época no Experimento 2 (\texttt{layer4} + \texttt{fc}). A linha pontilhada marca a época selecionada.}
@@ -203,7 +205,7 @@ No Experimento 2, a acurácia de validação passou de 93,31\% (valor do modelo 
 
 A Tabela~\ref{tab:teste} resume o desempenho no teste. O ajuste fino aumentou a acurácia em 4,52 pontos percentuais e o F1 macro em 4,72 pontos, e o número de erros caiu de 287 para 104, uma redução de 63,8\%. Os valores de teste ficaram próximos dos de validação nos dois casos (diferenças de 0,45 e 0,20 ponto percentual), o que indica que a seleção de modelos pela validação não favoreceu indevidamente nenhum dos experimentos.
 
-\begin{table}[!t]
+\begin{table}[H]
 \centering
 \caption{Desempenho no conjunto de teste (4.050 imagens)}
 \label{tab:teste}
@@ -225,61 +227,70 @@ Na comparação imagem a imagem, 215 imagens erradas pelo Experimento 1 passaram
 \end{equation}
 com um grau de liberdade, o que corresponde a $p < 0{,}001$. A diferença entre os dois modelos, portanto, não pode ser explicada por variação aleatória nas imagens de teste.
 
-A Tabela~\ref{tab:classes} detalha o desempenho por classe, e a Fig.~\ref{fig:comparacao} compara visualmente as métricas. Todas as classes melhoraram com o ajuste fino, e todas passaram a ter F1 acima de 94,8\%. Os maiores ganhos foram em \textit{PermanentCrop} (+7,70 pontos), \textit{River} (+7,62) e \textit{Highway} (+7,44), justamente as classes com pior desempenho no Experimento 1. Nesse experimento, \textit{Highway} e \textit{PermanentCrop} tinham revocação de apenas 82,1\% e 82,4\%, ou seja, quase uma em cada cinco imagens dessas classes era atribuída a outra classe. Com o ajuste fino, as revocações subiram para 95,2\% e 95,5\%.
+A Tabela~\ref{tab:classes} detalha o desempenho por classe, e a Fig.~\ref{fig:comparacao} compara visualmente o F1 de cada classe. Todas as classes melhoraram com o ajuste fino, e todas passaram a ter F1 acima de 94,8\%. Os maiores ganhos foram em \textit{PermanentCrop} (+7,70 pontos), \textit{River} (+7,62) e \textit{Highway} (+7,44), justamente as classes com pior desempenho no Experimento 1. Nesse experimento, \textit{Highway} e \textit{PermanentCrop} tinham revocação de apenas 82,1\% e 82,4\%, ou seja, quase uma em cada cinco imagens dessas classes era atribuída a outra classe. Com o ajuste fino, as revocações subiram para 95,2\% e 95,5\%.
 
-\begin{table*}[!t]
+\begin{table}[H]
 \centering
 \caption{Precisão (P), revocação (R) e F1 por classe no conjunto de teste, em porcentagem}
 \label{tab:classes}
-\begin{tabular}{lcccccccc}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccccc}
 \toprule
-\multirow{2}{*}{Classe} & \multirow{2}{*}{Imagens} & \multicolumn{3}{c}{Experimento 1 (\texttt{fc})} & \multicolumn{3}{c}{Experimento 2 (\texttt{layer4} + \texttt{fc})} & \multirow{2}{*}{Ganho em F1} \\
-\cmidrule(lr){3-5}\cmidrule(lr){6-8}
- & & P & R & F1 & P & R & F1 & \\
+\multirow{2}{*}{Classe} & \multicolumn{3}{c}{Exp. 1 (\texttt{fc})} & \multicolumn{3}{c}{Exp. 2 (\texttt{layer4}+\texttt{fc})} & \multirow{2}{*}{Ganho F1} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+ & P & R & F1 & P & R & F1 & \\
 \midrule
-AnnualCrop           & 450 & 94,05 & 94,89 & 94,47 & 98,42 & 96,89 & 97,65 & +3,18 \\
-Forest               & 450 & 92,89 & 98,67 & 95,69 & 98,67 & 99,11 & 98,89 & +3,20 \\
-HerbaceousVegetation & 450 & 92,20 & 92,00 & 92,10 & 96,46 & 96,89 & 96,67 & +4,57 \\
-Highway              & 375 & 93,33 & 82,13 & 87,38 & 94,44 & 95,20 & 94,82 & +7,44 \\
-Industrial           & 375 & 91,07 & 97,87 & 94,34 & 99,18 & 96,53 & 97,84 & +3,49 \\
-Pasture              & 300 & 90,16 & 94,67 & 92,36 & 96,70 & 97,67 & 97,18 & +4,82 \\
-PermanentCrop        & 375 & 95,67 & 82,40 & 88,54 & 97,02 & 95,47 & 96,24 & +7,70 \\
-Residential          & 450 & 94,04 & 98,22 & 96,09 & 98,89 & 99,33 & 99,11 & +3,03 \\
-River                & 375 & 86,04 & 90,40 & 88,17 & 94,55 & 97,07 & 95,79 & +7,62 \\
-SeaLake              & 450 & 98,85 & 95,33 & 97,06 & 99,11 & 99,33 & 99,22 & +2,16 \\
+AnnualCrop           & 94,05 & 94,89 & 94,47 & 98,42 & 96,89 & 97,65 & +3,18 \\
+Forest               & 92,89 & 98,67 & 95,69 & 98,67 & 99,11 & 98,89 & +3,20 \\
+HerbaceousVegetation & 92,20 & 92,00 & 92,10 & 96,46 & 96,89 & 96,67 & +4,57 \\
+Highway              & 93,33 & 82,13 & 87,38 & 94,44 & 95,20 & 94,82 & +7,44 \\
+Industrial           & 91,07 & 97,87 & 94,34 & 99,18 & 96,53 & 97,84 & +3,49 \\
+Pasture              & 90,16 & 94,67 & 92,36 & 96,70 & 97,67 & 97,18 & +4,82 \\
+PermanentCrop        & 95,67 & 82,40 & 88,54 & 97,02 & 95,47 & 96,24 & +7,70 \\
+Residential          & 94,04 & 98,22 & 96,09 & 98,89 & 99,33 & 99,11 & +3,03 \\
+River                & 86,04 & 90,40 & 88,17 & 94,55 & 97,07 & 95,79 & +7,62 \\
+SeaLake              & 98,85 & 95,33 & 97,06 & 99,11 & 99,33 & 99,22 & +2,16 \\
 \midrule
-Média (macro)        & 4.050 & -- & -- & 92,62 & -- & -- & 97,34 & +4,72 \\
+Média (macro)        & -- & -- & 92,62 & -- & -- & 97,34 & +4,72 \\
 \bottomrule
-\end{tabular}
-\end{table*}
+\end{tabular}}
+\end{table}
 
-\begin{figure*}[!t]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.8\textwidth]{comparacao_metricas.png}
-\caption{Acurácia e F1 macro (à esquerda) e F1 por classe (à direita) no conjunto de teste para os dois experimentos. Nos gráficos, ``Etapa 3'' corresponde ao Experimento 1 e ``Etapa 4'', ao Experimento 2.}
+\includegraphics[width=\columnwidth]{comparacao_classes.png}
+\caption{F1 por classe no conjunto de teste para os dois experimentos. No gráfico, ``Etapa 3'' corresponde ao Experimento 1 e ``Etapa 4'', ao Experimento 2.}
 \label{fig:comparacao}
-\end{figure*}
+\end{figure}
 
 \subsection{Matrizes de confusão}
 
-As matrizes de confusão da Fig.~\ref{fig:matrizes} mostram onde os erros se concentram. No Experimento 1, as confusões mais frequentes foram entre classes que, vistas de cima, têm aparência parecida: 28 imagens de \textit{Highway} foram classificadas como \textit{River}, ambas formadas por uma faixa estreita e alongada atravessando outra cobertura; 20 imagens de \textit{PermanentCrop} foram classificadas como \textit{HerbaceousVegetation} e 12 como \textit{AnnualCrop}; e 14 imagens de \textit{HerbaceousVegetation} foram classificadas como \textit{Forest}.
+As matrizes de confusão das Figs.~\ref{fig:matriz1} e~\ref{fig:matriz2} mostram onde os erros se concentram. No Experimento 1, as confusões mais frequentes foram entre classes que, vistas de cima, têm aparência parecida: 28 imagens de \textit{Highway} foram classificadas como \textit{River}, ambas formadas por uma faixa estreita e alongada atravessando outra cobertura; 20 imagens de \textit{PermanentCrop} foram classificadas como \textit{HerbaceousVegetation} e 12 como \textit{AnnualCrop}; e 14 imagens de \textit{HerbaceousVegetation} foram classificadas como \textit{Forest}.
 
-\begin{figure*}[!t]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth]{matrizes_confusao.png}
-\caption{Matrizes de confusão no conjunto de teste. À esquerda, Experimento 1 (apenas \texttt{fc}); à direita, Experimento 2 (\texttt{layer4} + \texttt{fc}). As linhas indicam a classe real e as colunas, a classe prevista.}
-\label{fig:matrizes}
-\end{figure*}
+\includegraphics[width=0.88\columnwidth]{matriz_exp1.png}
+\caption{Matriz de confusão do Experimento 1 (apenas \texttt{fc}) no conjunto de teste. As linhas indicam a classe real e as colunas, a classe prevista.}
+\label{fig:matriz1}
+\end{figure}
 
-Após o ajuste fino, essas confusões diminuíram bastante: \textit{Highway}$\rightarrow$\textit{River} caiu de 28 para 11 casos, \textit{PermanentCrop}$\rightarrow$\textit{HerbaceousVegetation} de 20 para 9 e \textit{HerbaceousVegetation}$\rightarrow$\textit{Forest} de 14 para 1. A interpretação é que os filtros do \texttt{layer4}, originalmente ajustados para objetos do ImageNet, passaram a responder a padrões próprios das imagens de satélite, como a largura e a textura de uma faixa linear ou o espaçamento regular das fileiras de um cultivo permanente. Com a rede congelada, o classificador linear só podia combinar características que não foram aprendidas para separar esses casos.
+Após o ajuste fino (Fig.~\ref{fig:matriz2}), essas confusões diminuíram bastante: \textit{Highway}$\rightarrow$\textit{River} caiu de 28 para 11 casos, \textit{PermanentCrop}$\rightarrow$\textit{HerbaceousVegetation} de 20 para 9 e \textit{HerbaceousVegetation}$\rightarrow$\textit{Forest} de 14 para 1. A interpretação é que os filtros do \texttt{layer4}, originalmente ajustados para objetos do ImageNet, passaram a responder a padrões próprios das imagens de satélite, como a largura e a textura de uma faixa linear ou o espaçamento regular das fileiras de um cultivo permanente. Com a rede congelada, o classificador linear só podia combinar características que não foram aprendidas para separar esses casos.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\columnwidth]{matriz_exp2.png}
+\caption{Matriz de confusão do Experimento 2 (\texttt{layer4} + \texttt{fc}) no conjunto de teste.}
+\label{fig:matriz2}
+\end{figure}
 
 \subsection{Análise dos erros}
 
 Dos 104 erros que restaram no Experimento 2, a maior parte envolve estruturas lineares: são 17 confusões entre \textit{Highway} e \textit{River} nos dois sentidos, além de 9 imagens de \textit{Industrial} classificadas como \textit{Highway}. Outro grupo envolve as classes de vegetação e cultivo (\textit{PermanentCrop}, \textit{HerbaceousVegetation} e \textit{AnnualCrop}). A Fig.~\ref{fig:erros} mostra os nove erros com maior confiança do modelo.
 
-\begin{figure}[!t]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.78\columnwidth]{exemplos_erros_ajuste_fino.png}
+\includegraphics[width=0.72\columnwidth]{exemplos_erros_ajuste_fino.png}
 \caption{Os nove erros de maior confiança do Experimento 2, com a classe real e a classe prevista.}
 \label{fig:erros}
 \end{figure}
