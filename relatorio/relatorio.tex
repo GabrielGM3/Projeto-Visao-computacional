@@ -53,17 +53,12 @@ Treinar uma rede profunda do zero, porém, exige muitos dados e tempo de process
 
 O objetivo deste trabalho é comparar essas duas estratégias usando a ResNet18~\cite{he2016deep} e a base EuroSAT RGB~\cite{helber2019eurosat}. Os dois experimentos usam exatamente a mesma divisão dos dados, o mesmo pré-processamento e as mesmas métricas, de modo que a diferença de desempenho possa ser atribuída à quantidade de camadas ajustadas. O escopo é o de um projeto de graduação: adaptamos um modelo existente, sem propor uma arquitetura nova.
 
-O restante do texto está organizado assim: a Seção~\ref{sec:relacionados} resume trabalhos relacionados; a Seção~\ref{sec:base} descreve a base e a divisão dos dados; a Seção~\ref{sec:metodo} apresenta o pré-processamento, o modelo e os dois experimentos; a Seção~\ref{sec:resultados} traz os resultados e a análise dos erros; a Seção~\ref{sec:discussao} discute limitações; e a Seção~\ref{sec:conclusao} conclui o trabalho.
+O restante do texto está organizado assim: a Seção~\ref{sec:base} define o problema e descreve a base de dados; a Seção~\ref{sec:referencia} apresenta a ResNet18, que serve como modelo de referência, e os resultados já publicados na EuroSAT; a Seção~\ref{sec:metodo} descreve o modelo proposto, com o pré-processamento e os dois experimentos; a Seção~\ref{sec:resultados} traz os resultados, a análise dos erros e as limitações; e a Seção~\ref{sec:conclusao} conclui o trabalho.
 
-\section{Trabalhos Relacionados}
-\label{sec:relacionados}
-
-Cheng \textit{et al.}~\cite{cheng2017remote} revisaram bases e métodos para classificação de cenas em sensoriamento remoto e mostraram que redes convolucionais pré-treinadas superam com folga os descritores manuais tradicionais. Helber \textit{et al.}~\cite{helber2018introducing,helber2019eurosat} apresentaram a EuroSAT, construída com imagens do Sentinel-2, e avaliaram redes como GoogLeNet e ResNet-50 com transferência de aprendizagem a partir do ImageNet. No trabalho original, a ResNet-50 ajustada nas bandas RGB atingiu 98,57\% de acurácia, com divisão de 80\% para treino e 20\% para teste.
-
-Yosinski \textit{et al.}~\cite{yosinski2014transferable} quantificaram o quanto as camadas de uma rede são transferíveis e observaram que ajustar as camadas transferidas melhora o resultado mesmo quando a tarefa de origem é bem diferente da de destino. Kornblith \textit{et al.}~\cite{kornblith2019better} mostraram que, em várias bases, o ajuste fino costuma superar o uso da rede apenas como extratora de características. Este trabalho segue essa linha, mas com uma rede menor (ResNet18) e um orçamento de treino reduzido, compatível com execução em CPU.
-
-\section{Base de Dados}
+\section{Problema e Conjunto de Dados}
 \label{sec:base}
+
+O problema tratado é de classificação multiclasse: dada uma imagem RGB de uma pequena área da superfície, vista por satélite, o modelo deve indicar qual das dez classes de uso e cobertura do solo melhor a descreve. Cada imagem tem um único rótulo. O desempenho é medido principalmente pela acurácia e pelo F1 macro em um conjunto de teste separado, que não participa de nenhuma etapa do treinamento.
 
 A EuroSAT RGB contém 27.000 imagens de $64\times64$ pixels, recortadas de cenas do Sentinel-2 com resolução espacial de 10~m por pixel~\cite{helber2019eurosat}. Cada imagem cobre cerca de $640\times640$~m e pertence a uma de dez classes: \textit{AnnualCrop}, \textit{Forest}, \textit{HerbaceousVegetation}, \textit{Highway}, \textit{Industrial}, \textit{Pasture}, \textit{PermanentCrop}, \textit{Residential}, \textit{River} e \textit{SeaLake}. A base é levemente desbalanceada: cinco classes têm 3.000 imagens, quatro têm 2.500 e \textit{Pasture} tem 2.000.
 
@@ -95,8 +90,29 @@ Total                & 27.000 & 18.900 & 4.050 & 4.050 \\
 
 A estratificação garante que mesmo a classe menor (\textit{Pasture}) tenha 300 imagens no teste, o que torna mais confiável o cálculo do F1 macro e da matriz de confusão.
 
-\section{Metodologia}
+\section{Sobre o Modelo de Referência}
+\label{sec:referencia}
+
+\subsection{ResNet18}
+
+O modelo de referência deste trabalho é a ResNet18~\cite{he2016deep}, uma rede convolucional da família das redes residuais. A principal ideia da ResNet é o bloco residual: em vez de aprender diretamente uma transformação $H(x)$, cada bloco aprende uma correção $F(x)$ que é somada à própria entrada,
+\begin{equation}
+y = F(x) + x .
+\end{equation}
+Essa ligação direta facilita a passagem do gradiente durante o treino e permitiu treinar redes bem mais profundas do que as anteriores sem perda de desempenho.
+
+A ResNet18 tem cerca de 11,2 milhões de parâmetros, organizados em uma camada convolucional inicial com \textit{max pooling}, quatro estágios de blocos residuais (\texttt{layer1} a \texttt{layer4}), cada um com dois blocos, uma média global (\textit{global average pooling}) e uma camada totalmente conectada (\texttt{fc}) com 1.000 saídas. A cada estágio, a resolução espacial cai pela metade e o número de canais dobra, de 64 até 512. Usamos a implementação da biblioteca Torchvision~\cite{torchvision2016}, com os pesos \texttt{IMAGENET1K\_V1}, obtidos no treinamento da rede para as 1.000 classes do ImageNet~\cite{deng2009imagenet}. A escolha da ResNet18, e não de versões maiores, se deve ao seu tamanho reduzido, que torna viável o treino em CPU.
+
+\subsection{Resultados de referência na EuroSAT}
+
+Cheng \textit{et al.}~\cite{cheng2017remote} revisaram bases e métodos para classificação de cenas em sensoriamento remoto e mostraram que redes convolucionais pré-treinadas superam com folga os descritores manuais tradicionais. Helber \textit{et al.}~\cite{helber2018introducing,helber2019eurosat} apresentaram a EuroSAT, construída com imagens do Sentinel-2, e avaliaram redes como GoogLeNet e ResNet-50 com transferência de aprendizagem a partir do ImageNet. No trabalho original, a ResNet-50 ajustada nas bandas RGB atingiu 98,57\% de acurácia, com divisão de 80\% para treino e 20\% para teste.
+
+Yosinski \textit{et al.}~\cite{yosinski2014transferable} quantificaram o quanto as camadas de uma rede são transferíveis e observaram que ajustar as camadas transferidas melhora o resultado mesmo quando a tarefa de origem é bem diferente da de destino. Kornblith \textit{et al.}~\cite{kornblith2019better} mostraram que, em várias bases, o ajuste fino costuma superar o uso da rede apenas como extratora de características. Este trabalho segue essa linha, mas com uma rede menor (ResNet18) e um orçamento de treino reduzido, compatível com execução em CPU.
+
+\section{Modelo Proposto}
 \label{sec:metodo}
+
+O modelo proposto consiste em adaptar a ResNet18 pré-treinada à EuroSAT, trocando sua camada de saída e treinando a rede em duas configurações: na primeira, só a nova camada de saída é ajustada; na segunda, o último estágio de blocos residuais também é ajustado. As duas configurações usam o mesmo pré-processamento, a mesma divisão dos dados e as mesmas métricas.
 
 \subsection{Pré-processamento}
 
@@ -113,9 +129,9 @@ No treino, foram aplicadas variações aleatórias que mantêm a classe da image
 
 O conjunto de treino é embaralhado a cada época, com semente fixa, e os lotes têm 64 imagens. Isso é necessário porque o arquivo de divisão está ordenado por classe: sem o embaralhamento, cada lote teria uma única classe.
 
-\subsection{Modelo}
+\subsection{Adaptação da camada de saída}
 
-Foi usada a ResNet18~\cite{he2016deep} da biblioteca Torchvision~\cite{torchvision2016}, com os pesos \texttt{IMAGENET1K\_V1}. A rede tem cerca de 11,2 milhões de parâmetros, organizados em uma camada convolucional inicial, quatro blocos residuais (\texttt{layer1} a \texttt{layer4}) e uma camada totalmente conectada (\texttt{fc}). A camada \texttt{fc} original, com 1.000 saídas, foi substituída por uma nova camada linear com 10 saídas, uma por classe. Todo o código foi escrito em Python com PyTorch~\cite{paszke2019pytorch}.
+A camada \texttt{fc} original, com 1.000 saídas, foi substituída por uma nova camada linear com 512 entradas e 10 saídas, uma por classe, inicializada aleatoriamente. O restante da rede mantém os pesos do ImageNet. Todo o código foi escrito em Python com PyTorch~\cite{paszke2019pytorch}.
 
 \subsection{Experimento 1: treino da camada final}
 
@@ -239,7 +255,7 @@ Média (macro)        & 4.050 & -- & -- & 92,62 & -- & -- & 97,34 & +4,72 \\
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=0.92\textwidth]{comparacao_metricas.png}
+\includegraphics[width=0.8\textwidth]{comparacao_metricas.png}
 \caption{Acurácia e F1 macro (à esquerda) e F1 por classe (à direita) no conjunto de teste para os dois experimentos. Nos gráficos, ``Etapa 3'' corresponde ao Experimento 1 e ``Etapa 4'', ao Experimento 2.}
 \label{fig:comparacao}
 \end{figure*}
@@ -250,7 +266,7 @@ As matrizes de confusão da Fig.~\ref{fig:matrizes} mostram onde os erros se con
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth]{matrizes_confusao.png}
+\includegraphics[width=0.9\textwidth]{matrizes_confusao.png}
 \caption{Matrizes de confusão no conjunto de teste. À esquerda, Experimento 1 (apenas \texttt{fc}); à direita, Experimento 2 (\texttt{layer4} + \texttt{fc}). As linhas indicam a classe real e as colunas, a classe prevista.}
 \label{fig:matrizes}
 \end{figure*}
@@ -263,14 +279,14 @@ Dos 104 erros que restaram no Experimento 2, a maior parte envolve estruturas li
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=\columnwidth]{exemplos_erros_ajuste_fino.png}
+\includegraphics[width=0.78\columnwidth]{exemplos_erros_ajuste_fino.png}
 \caption{Os nove erros de maior confiança do Experimento 2, com a classe real e a classe prevista.}
 \label{fig:erros}
 \end{figure}
 
 Observando essas imagens, nota-se que vários erros não são equívocos grosseiros do modelo. Em muitas delas há mais de uma classe presente no mesmo recorte: áreas industriais e residenciais cortadas por vias largas, ou uma rodovia que corre ao lado de um rio. Como cada imagem tem um único rótulo e cobre uma área pequena, o elemento que define a classe às vezes ocupa uma parte menor do quadro do que outro elemento que o modelo reconhece com segurança. Em alguns casos, como imagens rotuladas como \textit{River} em que se vê com clareza uma rodovia, o rótulo da própria base parece questionável. O fato de esses erros terem confiança acima de 99\% reforça que o modelo está reagindo a um conteúdo real da imagem. Também se observa que imagens como \textit{Highway\_848} e \textit{Highway\_891} foram erradas pelos dois modelos, o que sugere que são casos intrinsecamente ambíguos, e não falhas de um treinamento específico.
 
-\section{Discussão e Limitações}
+\subsection{Discussão e limitações}
 \label{sec:discussao}
 
 Os resultados confirmam o que a literatura aponta~\cite{yosinski2014transferable,kornblith2019better}: os filtros pré-treinados no ImageNet já são úteis para imagens de satélite, a ponto de um classificador linear sobre eles atingir quase 93\% de acurácia, mas ajustar as camadas mais profundas ao novo domínio traz um ganho grande. A distância entre o ImageNet (fotos de objetos tiradas no nível do chão) e a EuroSAT (vista aérea, sem orientação definida) ajuda a explicar por que as camadas mais específicas precisam ser adaptadas. O resultado de 97,43\% ficou próximo dos 98,57\% relatados por Helber \textit{et al.}~\cite{helber2019eurosat} com a ResNet-50, uma rede maior, com divisão de dados diferente e mais tempo de treino.
